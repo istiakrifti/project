@@ -1,0 +1,29 @@
+.Products1 {
+  width: 100%;
+  height: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  place-items: center;
+  text-align: center;
+}
+
+.Head{
+  text-align: center;
+}
+
+.Product1 {
+  border-radius: 15px;
+  width: 350px;
+  height: 370px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 30px auto;
+  box-shadow: 0 0 5px #4e4d4d;
+}
+
+
+.Product1 .Description1 {
+  text-align: center;
+}

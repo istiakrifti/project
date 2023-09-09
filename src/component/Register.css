@@ -1,0 +1,50 @@
+/* register.css */
+
+
+  
+  .card {
+    border: none;
+    color: rgb(244, 244, 250);
+    font-size: 18px;
+    font-weight: bold;
+    background-color: #31353a;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  .row{
+    background-color: #aab6c2;
+  }
+  .card-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .form-control {
+    border: 1px solid #02070d;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .btn-primary {
+    background-color: #7b8ea1;
+    border: none;
+  }
+  
+  .btn-primary:hover {
+    background-color: #7a9cc2;
+  }
+  
+  .btn-primary:focus {
+    box-shadow: none;
+  }
+  
+  /* Additional styles for responsiveness */
+  @media (max-width: 768px) {
+    .container {
+      margin-top: 20px;
+    }
+  }
+  .required {
+    color: rgb(231, 7, 7);
+    margin-left: 5px;
+  }

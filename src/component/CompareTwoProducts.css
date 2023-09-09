@@ -1,0 +1,36 @@
+/* CompareTwoProducts.css */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+  
+  th, td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+  }
+  
+  th {
+    background-color: #f4f0f0;
+  }
+  
+  td {
+    background-color: #ce4242;
+  }
+  
+  
+  td.product1 {
+    background-color: #c4c2c2; 
+    font-weight: bold;
+  }
+  
+  
+  td.product2 {
+    background-color: #c4c2c2; 
+    font-weight: bold;
+  }
+  .attr{
+    font-size: 18px;
+  }

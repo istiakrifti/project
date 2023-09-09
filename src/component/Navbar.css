@@ -1,0 +1,20 @@
+.dropdown-menu{
+    position: absolute;
+    background-color: #556f8a;
+    border: none;
+    border-radius: 3px;
+    box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.2);
+}
+.logout {
+    color: #050505;
+    text-decoration: none;
+}
+.dropdown-menu a:hover,
+.dropdown-menu button:hover {
+    background-color: #495057;
+    color: #ffffff;
+}
+.dropdown-menu a,
+.dropdown-menu button {
+    font-weight: bold;
+}

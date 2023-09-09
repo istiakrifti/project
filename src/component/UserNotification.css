@@ -1,0 +1,74 @@
+/* CSS for Notification Component */
+.notification-icon {
+    position: fixed;
+    bottom: 140px;
+    right: 5px;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 24px;
+    transition: background-color 0.3s ease-in-out;
+  }
+  
+  
+  .off-canvas {
+    position: fixed;
+    top: 0;
+    right: 0px; /* Adjust the width of the off-canvas */
+    width: 300px;
+    height: 100%;
+    background-color: #fff;
+    box-shadow: -5px 0 10px rgba(0, 0, 0, 0.2);
+    transition: right 0.3s ease-in-out;
+    z-index: 1000;
+    overflow-y: auto;
+  }
+  
+  .off-canvas-content {
+    padding: 20px;
+  }
+  
+  .off-canvas h2 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .off-canvas ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .off-canvas li {
+    font-size: 16px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ddd; /* Add a border between messages */
+    padding-bottom: 10px;
+  }
+  
+  .off-canvas li:last-child {
+    border-bottom: none; /* Remove border for the last message */
+  }
+  
+  .off-canvas button {
+    display: block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+  }
+  
+  .off-canvas button:hover {
+    background-color: #0056b3;
+  }
+  

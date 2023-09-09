@@ -1,0 +1,123 @@
+.container5 {
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .page-title {
+    font-size: 30px;
+    margin-bottom: 20px;
+  }
+  
+  .row5 {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .customer-info-section {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #737272;
+    height: 550px;
+    margin-right: 10px; 
+    background-color: #f9f9f9;
+  }
+  .customer-info-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Add some spacing between form elements */
+  }
+  
+  /* Form group styles */
+  .form-group {
+    flex: 1;
+  }
+  
+  /* Label styles */
+  .form-group label {
+    display: block;
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 5px;
+  }
+  
+  /* Input styles */
+  .form-group input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  /* Radio button styles */
+  .radio-inline input[type="radio"] {
+    margin-right: 10px;
+  }
+  
+  /* Adjust input width for smaller screens */
+  @media screen and (max-width: 768px) {
+    .form-group input {
+      width: 100%;
+    }
+  }
+
+  .payment-info-section {
+    flex: 1;
+    padding: 10px;
+    height: 550px;
+    
+    border: 1px solid #737272;
+    background-color: #f9f9f9;
+  }
+  
+ 
+  .payment-options {
+    margin-top: 10px;
+  }
+
+  .accepted-logo {
+    margin-top: 20px;
+  }
+  
+  .product-details-section {
+    margin-top: 20px;
+  }
+  
+  /* Table styles */
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  
+  .table th {
+    background-color: #f2f2f2;
+    text-align: left;
+    padding: 8px;
+    font-weight: bold;
+  }
+  
+  .table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+  }
+  
+  /* Confirm Order button styles */
+  .checkout-final-action {
+    margin-top: 20px;
+    text-align: right;
+  }
+  
+  .submit-btn {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .submit-btn:hover {
+    background-color: #0056b3;
+  }
+  
