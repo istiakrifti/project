@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import './CompareTwoProducts.css';
+import StarRating from './Assets/StarRating';
 
 function CompareTwoProduct(props) {
   const location = useLocation();
@@ -33,11 +34,11 @@ function CompareTwoProduct(props) {
       <table>
         <thead>
           <tr>
-            <th>Attribute</th>
+            <th> </th>
             <th className="product1"><div><img src={require('../image/'+product[0].IMG_URL)} alt='product1' width={'150px'} height={'150px'}/><br/>
-            <p>{product[0].NAME}</p><p><b style={{ color: 'red' }}>&#2547;{product[0].BASE_PRICE}</b></p></div></th>
+            <p>{product[0].NAME}</p><p><b style={{ color: 'red' }}>&#2547;{product[0].BASE_PRICE}</b></p><p><StarRating rating={product[0].RATING} /></p></div></th>
             <th className="product2"><div><img src={require('../image/'+product[1].IMG_URL)} alt='product2' width={'150px'} height={'150px'}/><br/>
-            <p>{product[1].NAME}</p><p><b style={{ color: 'red' }}>&#2547;{product[1].BASE_PRICE}</b></p></div></th>
+            <p>{product[1].NAME}</p><p><b style={{ color: 'red' }}>&#2547;{product[1].BASE_PRICE}</b></p><p><StarRating rating={product[1].RATING} /></p></div></th>
           </tr>
         </thead>
         <tbody>

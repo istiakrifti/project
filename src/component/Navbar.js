@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import './Navbar.css';
 import { Link,useNavigate } from 'react-router-dom';
 import DynamicNavbar from './DynamicNavbar';
-export default function Navbar(props) {
-  const [showDropdown, setShowDropdown] = useState(false);
+import { useUser } from './UserCntxt'; 
 
+export default function Navbar(props) {
+  const {updateRole,userName}= useUser();
+  console.log(userName);
+  const [showDropdown, setShowDropdown] = useState(false);
     const navigate = useNavigate();
 
     const [key,setKey] =useState('');
@@ -13,10 +16,11 @@ export default function Navbar(props) {
       e.preventDefault();    
       navigate(`/searchedproducts?key=${key}`);
   }
-  
   function setLogin (){
     props.setLoginStatus(false);
     props.setCartCount(0);
+    updateRole('null');
+
   }
   const toggleDropdown = () => {
     setShowDropdown(!showDropdown);
@@ -78,7 +82,7 @@ export default function Navbar(props) {
                   aria-haspopup="true"
                   aria-expanded={showDropdown}
                 >
-                 <b> Your Profile </b>
+                 <b> {userName} </b>
                 </span>
                 <div
                   className={`dropdown-menu ${showDropdown ? 'show' : ''}`}
@@ -99,9 +103,7 @@ export default function Navbar(props) {
         </div>
       </div>
     </nav>
-    <div>
-    <DynamicNavbar/></div>
+    <div><DynamicNavbar/></div>
     </div>
-
   );
 }

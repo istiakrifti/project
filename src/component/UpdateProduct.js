@@ -4,9 +4,11 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { useUser } from './UserCntxt';
+import CustomAlert from './Assets/CustomAlert';
 
 export default function UpdateProduct() {
     const location = useLocation();
+    const [ShowAlert, setShowAlert] = useState(false);
     const queryParams = new URLSearchParams(location.search); 
     const id = queryParams.get('itemId');
     const {userId}= useUser();
@@ -23,6 +25,14 @@ export default function UpdateProduct() {
         brand: '',
         stock: ''
     });
+
+    const handleShowAlert = () => {
+      setShowAlert(true);
+    };
+    const handleCloseAlert = () => {
+      setShowAlert(false);
+      navigate('/');
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -70,11 +80,12 @@ export default function UpdateProduct() {
         axios.post('http://localhost:3000/updateProduct', formData)
             .then((res) => {
                 console.log(res.data);
-                navigate('/');
+                handleShowAlert();
             })
             .catch((err) => {
                 console.error('Update failed:', err);
             });
+            
     };
 
     return (
@@ -174,6 +185,13 @@ export default function UpdateProduct() {
                 <div className="d-flex justify-content-center">
                 <button type="submit" className="btn btn-primary">UPDATE</button>
                 </div>
+                {ShowAlert && (
+                  
+                    <CustomAlert
+                    message="Info has been updated!"
+                    onClose={handleCloseAlert}
+                    type="success"/>
+                 )}
 
               </form>
             </div>

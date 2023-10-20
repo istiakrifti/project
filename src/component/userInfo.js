@@ -36,7 +36,7 @@ function UserInfo() {
               <>
              <Card className='mt-2 border-0 rounded-0 shadow-sm' >
              <CardBody style={{ backgroundColor: '#696969' }}>
-                <h3 className='text-uppercase'>user Information</h3>
+                <h3 className='text-uppercase'style={{color:'yellow'}}>YOUR PROFILE</h3>
 
                 <Container className='text-center'>
                     <img style={{ maxWidth: '200px', maxHeight: '200px' }} src={user.image ? user.image : 'https://cdn.dribbble.com/users/6142/screenshots/5679189/media/1b96ad1f07feee81fa83c877a1e350ce.png?compress=1&resize=400x300&vertical=top'} alt="user profile picture" className='img-fluid  rounded-circle' />
@@ -56,7 +56,7 @@ function UserInfo() {
                                  NAME
                             </td>
                             <td>
-                                {user.FIRST_NAME + ' ' + user.LAST_NAME}
+                                {user.ROLE!=='admin'? (user.FIRST_NAME + ' ' + user.LAST_NAME) : (user.FIRST_NAME + ' ' + user.LAST_NAME +' (admin) ')}
                             </td>
                         </tr>
                         <tr>

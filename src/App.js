@@ -26,6 +26,7 @@ import ApprovePurchase from './component/ApprovePurchase';
 import UserNotification from './component/UserNotification';
 import CompareTwoProduct from './component/CompareTwoProduct';
 import Compare from './component/Compare';
+import Footer from './component/Footer';
 
 
 function App() {
@@ -69,6 +70,7 @@ function App() {
       <Compare comCount={comCount} loginStatus={loginStatus} setComCount={setComCount} compare={compare} setCompare={setCompare}/>
       <Cart cartCount={cartCount} setCartCount={setCartCount} cart={cart} setCart={setCart} user={user} show={show} setShow={setShow} showOffcanvas={showOffcanvas} setShowOffcanvas={setShowOffcanvas}/>
       </UserProvider>
+      <Footer/>
     </Router>
     
     </>

@@ -53,4 +53,25 @@
     margin-top: 10px; 
     box-shadow: 0 0 5px #554747;
   }
+  .comment-item {
+    margin-bottom: 20px; /* Add margin between comments */
+  }
   
+  .reply-container {
+    margin-left: 20px; /* Add left margin to replies */
+  }
+  
+  
+  .replies {
+    margin-left: 20px; /* Add left margin to nested replies */
+  }
+  
+  .reply-item {
+    margin-bottom: 10px; /* Add margin between nested replies */
+  }
+  .comment-separator {
+    border-top: 3px solid #ddd;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding-top: 10px; /* Adjust this value for spacing */
+  }

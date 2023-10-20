@@ -7,7 +7,7 @@ import axios from 'axios';
 export default function Login(props) {
     const [email,setEmail] =useState('');
     const [password,setPassword] =useState('');
-    const {updateUser,updateRole}= useUser();
+    const {updateUser,updateRole,updateName}= useUser();
     const navigate = useNavigate();
 
     // const [loginStatus,setLoginStatus]=useState(false);
@@ -17,14 +17,13 @@ export default function Login(props) {
         e.preventDefault();
         axios.post('http://localhost:3000/login',{email,password})
         .then(res=>{
+            console.log(res.data.result);
             l=res.data.result.length;
             console.log(l);
             if(l) 
             {   
-                if(res.data.result1[0].CARTITEMS !==null)
-                props.setCartCount(res.data.result1[0].CARTITEMS)
-                else props.setCartCount(0);
-                console.log(res.data.result1[0].CARTITEMS);
+                props.setCartCount(res.data.result1);
+                console.log(res.data.result1);
                 props.setCart({info:res.data.reslt});
                 props.setLoginStatus(true);
                 const x=res.data.result[0].ID;
@@ -32,7 +31,8 @@ export default function Login(props) {
                 console.log(x);
                 updateUser(res.data.result[0].ID);
                 updateRole(res.data.result[0].ROLE);
-                console.log(res.data.result[0].ROLE);
+                updateName(res.data.result[0].FIRST_NAME+' '+res.data.result[0].LAST_NAME);
+                console.log('In login '+res.data.result[0].FIRST_NAME+' '+res.data.result[0].LAST_NAME);
                 navigate('/');
             }
             else setCheck(true);
@@ -58,13 +58,13 @@ export default function Login(props) {
                     )}
                     <form onSubmit={handleSubmit}>
                         <div className="form-row py-3 pt-5">
-                            <div className='offset-1 col-lg-10'>
+                            <div className='offset-1 col-lg-15'>
                             <input type="email" onChange={e=>setEmail(e.target.value)} className='inp px-3' autoComplete='off' placeholder='Email Address'/>
                             </div>
                             
                         </div>
                         <div className="form-row py-3">
-                            <div className='offset-1 col-lg-10'>
+                            <div className='offset-1 col-lg-15'>
                             <input type="password" onChange={e=>setPassword(e.target.value)} className='inp px-3' autoComplete='off' placeholder='Password'/>
                             </div>
                         </div>

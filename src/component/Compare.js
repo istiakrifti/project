@@ -56,21 +56,26 @@ const handleCompareNow = () => {
         <div className="compare-panel">
           <div className="panel-header">
             <h2>Compare Items</h2>
-            <div className="close-button" onClick={togglePanel}>
+            <div className="close-button1" onClick={togglePanel}>
               <FaTimes /> 
             </div>
           </div>
-          <ul>
-            {props.compare.map((item) => (
-              <li>
+          <div>
+          <ul className='compare-list'>
+            {props.compare.length>0?
+            props.compare.map((item) => (
+              <li className="compare-item">
                 <div className='selected'>
-                  {item.NAME}
+                <img src={require('../image/'+item.IMG_URL)} alt='product' width={"30px"} height={"30px"}/>
+                <p className="name">{item.NAME}</p>
                 </div>
               </li>
-            ))}
-          </ul>
-          <button onClick={handleCompareNow}>Compare Now</button>
-          <button onClick={handleClear}>Clear</button>
+            )):(<b>Your Compare List Is Empty!!!</b>)}
+          </ul></div>
+          <div className='buttons'>
+          <button   onClick={handleCompareNow}>Compare Now</button><br/>
+          <button  onClick={handleClear}>Clear</button>
+          </div>
         </div>
       )}
     </div>

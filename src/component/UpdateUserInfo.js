@@ -3,11 +3,14 @@ import { useUser } from './UserCntxt';
 import './Register.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import CustomAlert from './Assets/CustomAlert';
+
 
 export default function UpdateUser() {
     const { userId } = useUser();
     const [userDetails, setUserDetails] = useState(null);
     const navigate = useNavigate();
+    const [ShowAlert, setShowAlert] = useState(false);
     const [formData, setFormData] = useState({
         userId:'',
         firstName: '',
@@ -19,6 +22,13 @@ export default function UpdateUser() {
         address: ''
     });
     const [passwordMatchError, setPasswordMatchError] = useState(false);
+    const handleShowAlert = () => {
+      setShowAlert(true);
+    };
+    const handleCloseAlert = () => {
+      setShowAlert(false);
+      navigate('/userInfo');
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -70,7 +80,8 @@ export default function UpdateUser() {
 
         axios.post('http://localhost:3000/updateUserInfo', formData)
             .then((res) => {
-                navigate('/');
+              handleShowAlert();
+                
             })
             .catch((err) => {
                 console.error('Update failed:', err);
@@ -176,6 +187,13 @@ export default function UpdateUser() {
                 <div className="d-flex justify-content-center">
                 <button type="submit" className="btn btn-primary">UPDATE</button>
                 </div>
+                {ShowAlert && (
+                  
+                  <CustomAlert
+                  message="Your info has been updated!"
+                  onClose={handleCloseAlert}
+                  type="success"/>
+               )}
 
               </form>
             </div>

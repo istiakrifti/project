@@ -36,7 +36,7 @@ function Notification(props) {
       {showOffCanvas && (
         <div className="off-canvas">
           <div className="off-canvas-content">
-            <h2>Notifications</h2>
+            <h2 style={{color:'yellow'}}><b>Notifications</b></h2>
             <ul>
               {msg.info.map((message, index) => (
                 <li key={index}><div className="message-text">{message.MESSAGE}</div>
@@ -45,7 +45,9 @@ function Notification(props) {
                 </div></li>
               ))}
             </ul>
-            <button onClick={handleCloseOffCanvas}>Close</button>
+            <button className="offcanvas-close" onClick={handleCloseOffCanvas}>
+        &times;
+      </button>
           </div>
         </div>
       )}

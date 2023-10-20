@@ -57,7 +57,7 @@ export default function Register(props) {
             )}
             {checkEmail && (
                 <div className="alert alert-danger" role="alert">
-                    Email already registered.Try different one..
+                    Email already registered or banned.Try different one..
                 </div>
             )}
               <form onSubmit={handleSubmit}>

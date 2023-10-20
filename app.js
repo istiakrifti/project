@@ -4,6 +4,7 @@ const oracledb = require('oracledb');
 const bodyParser = require('body-parser');
 const path= require('path');
 const fs = require('fs-extra');
+const bcrypt = require('bcrypt');
 const multer = require('multer');
 const tempStorage = multer.diskStorage({});
 const upload = multer({ storage:tempStorage });
@@ -31,17 +32,14 @@ const dbConfig = {
 
 let connectionPool;
 app.use(async (req, res, next) => {
-    // console.log('Executing connection pool middleware');
     try {
         if (!req.db) {
             const pool = await oracledb.createPool(dbConfig);
-            // console.log("pool created successfully");
             connectionPool = pool;
             req.db = pool;
         }
         next();
     } catch (err) {
-        // console.error(err);
         res.send('Database connection error.');
     }
 });
@@ -78,22 +76,40 @@ app.get('/',async (req,res)=>{
             WHERE I.IMG_URL LIKE '%img1.jpg%'
         )
         WHERE ROWNUM <= 8`;
+        
+        const query3 = `SELECT P.*,I.* FROM (
+            SELECT *
+            FROM (
+              SELECT *
+              FROM products
+              WHERE (category = 'Monitor') AND base_price = 0
+              ORDER BY category
+            )
+            WHERE ROWNUM <= 4
+            UNION ALL
+            SELECT *
+            FROM (
+              SELECT *
+              FROM products
+              WHERE (category = 'Component') AND base_price = 0
+              ORDER BY category
+            )
+            WHERE ROWNUM <= 4) P JOIN IMAGES I ON P.ID = I.PRODUCT_ID
+             WHERE I.IMG_URL LIKE '%img1.jpg%'`;
         const result = await connection.execute(query);
         const result1 = await connection.execute(query1);
         const result2 = await connection.execute(query2);
-        
+        const result3 = await connection.execute(query3);
         
         const reslt={
             result: result.rows,
             result1:result1.rows,
             result2:result2.rows,
+            result3:result3.rows,
         }
-        
-        
-        // console.log('Number of connections in use:', req.db.connectionsInUse);
-        // console.log('Number of connections available:', req.db.connectionsOpen);
         connection.release();
         res.json(reslt);
+        
     } catch (err) {
         console.log(err);
         res.send(err.message);
@@ -103,36 +119,82 @@ app.get('/',async (req,res)=>{
 
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
-    const bindParams = {
-        email: { val: email, type: oracledb.STRING },
-        password: { val: password, type: oracledb.STRING }
-    }
+    
+    
     try {
         const connection = await req.db.getConnection();
-        const query = `SELECT ID,EMAIL, PASS_WORD,ROLE
+
+        const qu = `SELECT ID,PASS_WORD FROM USERS`;
+        const passId= await connection.execute(qu);
+        async function fun(){
+        for(let i=0;i<passId.rows.length;i++)
+        {
+            let HashedPassword = passId.rows[i].PASS_WORD; 
+            
+
+            const passwordMatch = await new Promise((resolve, reject) => {
+                bcrypt.compare(password, HashedPassword, (err, match) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(match);
+                    }
+                });
+            });
+            if(passwordMatch)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+    const m=await fun();
+    let pass='';
+    if(m!==-1){
+    pass= passId.rows[m].PASS_WORD;}
+    const bindParams = {
+        email: { val: email, type: oracledb.STRING },
+        password: { val: pass, type: oracledb.STRING }
+    }
+        const query = `SELECT ID,EMAIL, PASS_WORD,ROLE,FIRST_NAME,LAST_NAME
                     FROM USERS 
                     WHERE EMAIL = :email AND PASS_WORD = :password`;
         
         const result = await connection.execute(query, bindParams, { autoCommit: true });
+
+        console.log(result.rows.length);
         const x = result.rows;
         let result1=[];
         let reslt=[];
+        let r=0;
         if(x.length>0){
             const y=result.rows[0].ID;
             const bindParams1={
-                id:{val:y,type:oracledb.NUMBER}
+                id:{val:y,type:oracledb.NUMBER},
+                resl1: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT }
             }
-            const query1 = `SELECT SUM(PRODUCT_COUNT) CARTITEMS
-                        FROM CART 
-                        WHERE USER_ID=:id`;
-            result1 = await connection.execute(query1, bindParams1, { autoCommit: true });
-            const q = `SELECT * FROM CART C JOIN PRODUCTS P ON P.ID=C.PRODUCT_ID JOIN IMAGES I ON I.PRODUCT_ID=P.ID WHERE C.USER_ID=:id AND I.IMG_URL LIKE '%img1.jpg'`;
-            reslt=await connection.execute(q,bindParams1,{autoCommit:true});
-        }
+            const bindParams2={
+                id:{val:y,type:oracledb.NUMBER},
+                
+            }
 
+            const query1 = `DECLARE
+                                count1 NUMBER;
+                            BEGIN
+                                number_of_cartitems(:id,count1);
+                                :resl1 := count1;
+                            END;`;
+            const  cItem= { outFormat: oracledb.OUT_FORMAT_OBJECT };
+            result1 = await connection.execute(query1, bindParams1,cItem);
+            r=result1.outBinds.resl1;
+            console.log(result1);
+            const q = `SELECT * FROM CART C JOIN PRODUCTS P ON P.ID=C.PRODUCT_ID JOIN IMAGES I ON I.PRODUCT_ID=P.ID WHERE C.USER_ID=:id AND I.IMG_URL LIKE '%img1.jpg'`;
+            reslt=await connection.execute(q,bindParams2,{autoCommit:true});
+        }
+        
         const rslt = {
             result:result.rows,
-            result1:result1.rows,
+            result1:r,
             reslt:reslt.rows,
         }
        
@@ -153,43 +215,90 @@ app.post('/product', async (req, res) => {
         const query = `SELECT * FROM PRODUCTS WHERE CATEGORY = :category`; 
         const result = await connection.execute(query, bindParams, { autoCommit: true });
         connection.release();
-        // console.log(result.rows);
         res.json(result.rows);
     } catch (err) {
         res.send(err.message);
     }
 });
 
+// app.post('/showdetails', async (req, res) => {
+//     const {id,userId} = req.body;
+//     const bindParams1 = {
+//         idval: { val: id, type: oracledb.STRING},
+//     }
+//     const bindParams2 = {
+//         PId: { val: id, type: oracledb.STRING},
+//         UserId:{ val: userId, type: oracledb.NUMBER}
+//     }
+//     try {
+//         const connection = await req.db.getConnection();
+//         const query1 = `SELECT * FROM 
+//         PRODUCTS P JOIN IMAGES I 
+//         ON P.ID = I.PRODUCT_ID
+//         WHERE P.ID = :idval AND I.IMG_URL LIKE '%img1.jpg'`;
+//         const query2 = `SELECT (U.FIRST_NAME||' '||U.LAST_NAME) AS NAME, R.TEXT
+//         FROM USERS U JOIN REVIEW R ON U.ID = R.USER_ID
+//         WHERE R.PRODUCT_ID = :idval`;
+//         const query3 = `SELECT * FROM 
+//         PURCHASE_PRODUCT PP JOIN PURCHASE P ON PP.PURCHASE_ID = P.PURCHASE_ID
+//         WHERE PP.PRODUCT_ID = :PId AND P.BOUGHT_BY = :UserId AND P.APPROVAL_DATE IS NOT NULL`;
+        
+//         const result1 = await connection.execute(query1,bindParams1, { autoCommit: true });
+//         const result2 = await connection.execute(query2,bindParams1, { autoCommit: true });
+//         const result3 = await connection.execute(query3,bindParams2, { autoCommit: true });
+//         connection.release();
+//         const result={
+//             result1: result1.rows,
+//             result2:result2.rows,
+//             result3:result3.rows
+//         }
+//         res.json(result);
+//     } catch (err) {
+//         console.log(err);
+//         res.send(err.message);
+//     }
+// });
+
 app.post('/showdetails', async (req, res) => {
-    const {id,userId} = req.body;
+    const { id, userId } = req.body;
     const bindParams1 = {
-        idval: { val: id, type: oracledb.STRING},
+        idval: { val: id, type: oracledb.STRING },
     }
     const bindParams2 = {
-        PId: { val: id, type: oracledb.STRING},
-        UserId:{ val: userId, type: oracledb.NUMBER}
+        PId: { val: id, type: oracledb.STRING },
+        UserId: { val: userId, type: oracledb.NUMBER }
     }
     try {
         const connection = await req.db.getConnection();
-        const query1 = `SELECT * FROM 
-        PRODUCTS P JOIN IMAGES I 
-        ON P.ID = I.PRODUCT_ID
-        WHERE P.ID = :idval AND I.IMG_URL LIKE '%img1.jpg'`;
+        const query1 = `SELECT P.ID, P.NAME, P.BASE_PRICE, P.DISCOUNT, P.RATING, P.CATEGORY, P.SUBCATEGORY, P.BRAND, P.STOCK, I.IMG_URL,
+                    LISTAGG(S.ATTR_NAME, ', ') WITHIN GROUP (ORDER BY S.ATTR_NAME) AS ATTNAMES,
+                LISTAGG(S.ATTR_VALUE, ', ') WITHIN GROUP (ORDER BY S.ATTR_NAME) AS ATTVALUES
+                    FROM PRODUCTS P
+                JOIN IMAGES I ON P.ID = I.PRODUCT_ID
+                LEFT JOIN SPEC_TABLE S ON P.ID = S.PRODUCT_ID
+                WHERE  P.ID = :idval AND I.IMG_URL LIKE '%img1.jpg' 
+                GROUP BY P.ID, P.NAME, P.BASE_PRICE, P.DISCOUNT, P.RATING, P.CATEGORY, P.SUBCATEGORY, P.BRAND, P.STOCK, I.IMG_URL`;
+        // const query1 = `SELECT * FROM 
+        //     PRODUCTS P JOIN IMAGES I 
+        //     ON P.ID = I.PRODUCT_ID
+        //     WHERE P.ID = :idval AND I.IMG_URL LIKE '%img1.jpg'`;
         const query2 = `SELECT (U.FIRST_NAME||' '||U.LAST_NAME) AS NAME, R.TEXT
-        FROM USERS U JOIN REVIEW R ON U.ID = R.USER_ID
-        WHERE R.PRODUCT_ID = :idval`;
+            FROM USERS U JOIN REVIEW R ON U.ID = R.USER_ID
+            WHERE R.PRODUCT_ID = :idval`;
         const query3 = `SELECT * FROM 
-        PURCHASE_PRODUCT PP JOIN PURCHASE P ON PP.PURCHASE_ID = P.PURCHASE_ID
-        WHERE PP.PRODUCT_ID = :PId AND P.BOUGHT_BY = :UserId`;
-        
-        const result1 = await connection.execute(query1,bindParams1, { autoCommit: true });
-        const result2 = await connection.execute(query2,bindParams1, { autoCommit: true });
-        const result3 = await connection.execute(query3,bindParams2, { autoCommit: true });
+            PURCHASE_PRODUCT PP JOIN PURCHASE P ON PP.PURCHASE_ID = P.PURCHASE_ID
+            WHERE PP.PRODUCT_ID = :PId AND P.BOUGHT_BY = :UserId 
+            AND P.APPROVAL_DATE IS NOT NULL`;
+
+        const result1 = await connection.execute(query1, bindParams1, { autoCommit: true });
+        const result2 = await connection.execute(query2, bindParams1, { autoCommit: true });
+        const result3 = await connection.execute(query3, bindParams2, { autoCommit: true });
+
         connection.release();
-        const result={
+        const result = {
             result1: result1.rows,
-            result2:result2.rows,
-            result3:result3.rows
+            result2: result2.rows,
+            result3: result3.rows,
         }
         res.json(result);
     } catch (err) {
@@ -197,21 +306,194 @@ app.post('/showdetails', async (req, res) => {
         res.send(err.message);
     }
 });
+app.post('/addComment', async (req, res) => {
+    const { productId, userId, text } = req.body;
+
+    const bindParams = {
+        p_ProductId: parseInt(productId),
+        p_UserId: parseInt(userId),
+        p_Text: text,
+        p_CommentId: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT }
+    };
+
+    try {
+        const connection = await req.db.getConnection();
+
+        const result = await connection.execute(
+            'BEGIN ADD_COMMENT(:p_ProductId, :p_UserId, :p_Text, :p_CommentId); END;',
+            bindParams,
+            {
+                autoCommit: true,
+                bindDefs: {
+                    p_CommentId: {
+                        type: oracledb.NUMBER
+                    }
+                }
+            }
+        );
+
+        const commentId = result.outBinds.p_CommentId;
+
+        connection.release();
+        console.log(commentId);
+        res.json({ commentId });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred while adding the comment.' });
+    }
+});
+
+app.post('/addReply', async (req, res) => {
+    const { productId, userId, text, parentCommentId } = req.body;
+
+    const bindParams = {
+        p_ProductId: parseInt(productId),
+        p_UserId: parseInt(userId),
+        p_Text: text,
+        p_ParentCommentId: parseInt(parentCommentId)
+    };
+
+    try {
+        const connection = await req.db.getConnection();
+
+        const result = await connection.execute(
+            'BEGIN :replyId := ADD_REPLY(:p_ProductId, :p_UserId, :p_Text, :p_ParentCommentId); END;',
+            {
+                replyId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER },
+                ...bindParams
+            },
+            {
+                autoCommit: true
+            }
+        );
+
+        const replyId = result.outBinds.replyId;
+
+        connection.release();
+
+        res.json({ replyId });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred while adding the reply.' });
+    }
+});
+
+// app.post('/addReply', async (req, res) => {
+//     const { productId, userId, text, parentCommentId } = req.body;
+//     console.log({ productId, userId, text, parentCommentId });
+
+//     const bindParams = {
+//         ProductId: parseInt(productId),
+//         UserId: parseInt(userId),
+//         Text: text,
+//         ParentCommentId: parseInt(parentCommentId),
+//         ReplyId: { type: oracledb.CURSOR, dir: oracledb.BIND_OUT }
+//     };
+
+//     try {
+//         const connection = await req.db.getConnection();
+//         const query = `
+//             DECLARE
+//                 v_replyId NUMBER;
+//             BEGIN
+//                 INSERT INTO COMMENTS (PRODUCT_ID, USER_ID, TEXT, COMMENT_ON)
+//                 VALUES (:ProductId, :UserId, :Text, :ParentCommentId)
+//                 RETURNING COMMENT_ID INTO v_replyId;
+//                 OPEN :ReplyId FOR SELECT v_replyId AS ID FROM DUAL;
+//             END;`;
+
+//         const result = await connection.execute(query, bindParams, {
+//             autoCommit: true,
+//             bindDefs: {
+//                 ReplyId: {
+//                     type: oracledb.CURSOR
+//                 }
+//             }
+//         });
+
+//         const replyIdCursor = result.outBinds.ReplyId;
+//         const replyRow = await replyIdCursor.getRow();
+//         const replyId = replyRow.ID;
+
+//         connection.release();
+
+//         res.json({ replyId });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: 'An error occurred while adding the reply.' });
+//     }
+// });
+app.get('/getComments/:product_id', async (req, res) => {
+    const productId = parseInt(req.params.product_id);
+    try {
+      const connection = await req.db.getConnection();
+      const query = `
+        SELECT 
+          c1.COMMENT_ID,
+          c1.PRODUCT_ID,
+          c1.USER_ID,
+          c1.TEXT,
+          c1.COMMENT_DATE,
+          c2.COMMENT_ID AS PARENT_COMMENT_ID,
+          u.FIRST_NAME,
+          u.LAST_NAME
+        FROM COMMENTS c1
+        LEFT JOIN COMMENTS c2 ON c1.COMMENT_ON = c2.COMMENT_ID
+        LEFT JOIN USERS u ON c1.USER_ID = u.ID
+        WHERE c1.PRODUCT_ID = :productId
+        ORDER BY c1.COMMENT_DATE ASC`;
+  
+      const result = await connection.execute(query, { productId });
+      connection.release();
+  
+      const comments = [];
+      const commentMap = new Map();
+  
+      // Group comments by their parent comment ID (replies)
+      result.rows.forEach(row => {
+        const comment = {
+          commentId: row.COMMENT_ID,
+          productId: row.PRODUCT_ID,
+          userId: row.USER_ID,
+          userName: `${row.FIRST_NAME} ${row.LAST_NAME}`,
+          text: row.TEXT,
+          commentDate: row.COMMENT_DATE,
+          replies: []
+        };
+  
+        if (row.PARENT_COMMENT_ID === null) {
+          comments.push(comment);
+        } else {
+          if (commentMap.has(row.PARENT_COMMENT_ID)) {
+            commentMap.get(row.PARENT_COMMENT_ID).replies.push(comment);
+          }
+        }
+  
+        commentMap.set(row.COMMENT_ID, comment);
+      });
+      console.log(comments);
+      res.json(comments);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'An error occurred while fetching comments.' });
+    }
+  });
 
 app.post('/register', async (req, res) => {
     const { firstName, lastName, email, password, phoneNumber, address } = req.body;
     const role = "customer";
-    const bindParams = {
-        firstName: { val: firstName, type: oracledb.STRING },
-        lastName: { val: lastName, type: oracledb.STRING },
-        email: { val: email, type: oracledb.STRING },
-        password: { val: password, type: oracledb.STRING },
-        phoneNumber: { val: phoneNumber, type: oracledb.STRING },
-        address: { val: address, type: oracledb.STRING },
-        role: { val: role, type: oracledb.STRING }
-    }
+    // const bindParams = {
+    //     firstName: { val: firstName, type: oracledb.STRING },
+    //     lastName: { val: lastName, type: oracledb.STRING },
+    //     email: { val: email, type: oracledb.STRING },
+    //     password: { val: password, type: oracledb.STRING },
+    //     phoneNumber: { val: phoneNumber, type: oracledb.STRING },
+    //     address: { val: address, type: oracledb.STRING },
+    //     role: { val: role, type: oracledb.STRING }
+    // }
+    const connection = await req.db.getConnection();
     try {
-        const connection = await req.db.getConnection();
+        
         const emailCheckQuery = `BEGIN
                                     IF is_email_registered(:email) = 0 THEN
                                         :result := 0;
@@ -224,18 +506,52 @@ app.post('/register', async (req, res) => {
             result: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT }
         };
         const emailCheckOptions = { outFormat: oracledb.OUT_FORMAT_OBJECT };
+        const banCheckQuery = `   DECLARE
+                                        msg varchar2(10);
+                                    BEGIN
+                                        is_email_banned(:email,msg);
+                                    IF msg='banned' THEN
+                                        :result1 := 0; 
+                                    ELSE
+                                        :result1 := 1;
+                                    END IF;
+                                END;`;
+        const banCheckBindParams = {
+            email: { val: email, type: oracledb.STRING, dir: oracledb.BIND_IN },
+            result1: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT }
+        };
+        const banCheckOptions = { outFormat: oracledb.OUT_FORMAT_OBJECT };
         const emailCheckResult = await connection.execute(emailCheckQuery, emailCheckBindParams, emailCheckOptions);
-        if (emailCheckResult.outBinds.result === 1) {
-        const query = `INSERT INTO USERS (FIRST_NAME, LAST_NAME, EMAIL, PASS_WORD, PHONE_NUMBER, USER_ADDRESS, ROLE) 
-                        VALUES (:firstName, :lastName, :email, :password, :phoneNumber, :address, :role)`;
-        await connection.execute(query, bindParams, { autoCommit: true });
-        connection.release();
-        res.send("Registration successful.");
+        const banCheckResult = await connection.execute(banCheckQuery, banCheckBindParams, banCheckOptions);
+        if (emailCheckResult.outBinds.result === 1 && banCheckResult.outBinds.result1===1) {
+            bcrypt.hash(password, 10, async(err, hash)=> {
+                if (err) {
+                  res.status(500).send('An error occurred during password hashing.');
+                  return;
+                }
+        
+                const hashedPassword = hash;
+                const query1 = `INSERT INTO USERS (FIRST_NAME, LAST_NAME, EMAIL, PASS_WORD, PHONE_NUMBER, USER_ADDRESS, ROLE) 
+                                VALUES (:firstName, :lastName, :email, :hashedPassword, :phoneNumber, :address, :role)`;
+                const bindParams = {
+                    firstName: { val: firstName, type: oracledb.STRING },
+                    lastName: { val: lastName, type: oracledb.STRING },
+                    email: { val: email, type: oracledb.STRING },
+                    phoneNumber: { val: phoneNumber, type: oracledb.STRING },
+                    address: { val: address, type: oracledb.STRING },
+                    role: { val: role, type: oracledb.STRING },
+                    hashedPassword: { val: hashedPassword, type: oracledb.STRING }
+                }
+                await connection.execute(query1, bindParams, { autoCommit: true });
+                connection.release();
+                res.send("Registration successful.");
+              });
+        
     }
     else
     {
         connection.release();
-        res.send("Email is already registered.");
+        res.send("Email is already registered or banned");
     } 
 }   
 catch (error) {
@@ -342,7 +658,7 @@ app.post('/showfilteredproducts', async (req, res) => {
                 FROM PRODUCTS
                 WHERE UPPER(CATEGORY) LIKE '${category.toUpperCase()}'
                 AND UPPER(SUBCATEGORY) IN (${subcategoryPlaceholders}))
-                OR UPPER(P.BRAND) NOT IN (SELECT DISTINCT UPPER(BRAND)
+                OR UPPER(P.BRAND) NOT IN (SELECT DISTINCT UPPER(BRAND)``````````````````````````````````````````````````
                     FROM PRODUCTS
                     WHERE UPPER(CATEGORY) LIKE '${category.toUpperCase()}'
                     AND UPPER(SUBCATEGORY) IN (${subcategoryPlaceholders})
@@ -407,15 +723,24 @@ app.post('/showfilteredproducts', async (req, res) => {
 app.post('/cart', async (req, res) => {
     const { u_id,id } = req.body;
     console.log(u_id);
+    let msg='';
     try {
         const connection = await oracledb.getConnection(dbConfig);
         const result = await connection.execute(`SELECT USER_ID,PRODUCT_ID,PRODUCT_COUNT FROM CART WHERE PRODUCT_ID = ${id} AND USER_ID=${u_id}`);
+        const res1 = await connection.execute(`SELECT * FROM PRODUCTS WHERE ID = ${id}`);
     console.log(result.rows.length);
     if (result.rows.length > 0) {
         console.log(result.rows);
         const index = result.rows.findIndex(item => item.PRODUCT_ID === id && item.USER_ID===u_id);
         console.log(index);
-        const updatedCount = result.rows[index].PRODUCT_COUNT + 1;
+        let updatedCount=result.rows[index].PRODUCT_COUNT;
+        if(result.rows[index].PRODUCT_COUNT<res1.rows[0].STOCK){
+         updatedCount = result.rows[index].PRODUCT_COUNT + 1;}
+         
+         if(result.rows[index].PRODUCT_COUNT===res1.rows[0].STOCK)
+         {
+            msg='stockOut';
+         }
         console.log(updatedCount);
         const bindParams = {
             u_id:{val:u_id,type: oracledb.NUMBER},
@@ -443,7 +768,11 @@ app.post('/cart', async (req, res) => {
     const q = `SELECT * FROM CART C JOIN PRODUCTS P ON P.ID=C.PRODUCT_ID JOIN IMAGES I ON P.ID=I.PRODUCT_ID WHERE C.USER_ID=:u_id  AND I.IMG_URL LIKE '%img1.jpg'`;
     const reslt=await connection.execute(q,bindParams,{autoCommit:true});
 
-    res.json(reslt.rows);
+    const rslt= {
+        result:reslt.rows,
+        msg:msg,
+    }
+    res.json(rslt);
     
     } catch (error){
         
@@ -467,7 +796,7 @@ app.post('/cart1', async (req, res) => {
         }
         const q = `SELECT * FROM CART C JOIN PRODUCTS P ON P.ID=C.PRODUCT_ID JOIN IMAGES I ON P.ID=I.PRODUCT_ID WHERE C.USER_ID=:u_id AND I.IMG_URL LIKE '%img1.jpg'`;
         const reslt=await connection.execute(q,bindParams,{autoCommit:true});
-
+        console.log("hiiii");
         const bindParams2={
             id:{val:user,type:oracledb.NUMBER}
         }
@@ -600,15 +929,14 @@ app.post('/payment', async (req, res) => {
     app.post('/updateProduct', async (req, res) => {
         const { productId,name, basePrice, discount, rating, category, subcategory,brand,stock } = req.body;
         const bindParams = {
-            PId: parseInt(productId),//{ val: productId, type: oracledb.NUMBER},
-            PName:name,// { val: name, type: oracledb.STRING },
-            BasePrice:parseInt(basePrice),// { val: basePrice, type: oracledb.NUMBER },
-            Discount:parseInt(discount),// { val: discount, type: oracledb.NUMBER },
-           // Rating: parseInt(rating),//{ val: rating, type: oracledb.NUMBER },
-            Category:category,// { val: category, type: oracledb.STRING },
-            SubCategory:subcategory,// { val: subcategory, type: oracledb.STRING },
-            Brand: brand,//{ val: brand, type: oracledb.STRING },
-            Stock:parseInt(stock)// { val: stock, type: oracledb.NUMBER }
+            PId: parseInt(productId),
+            PName:name,
+            BasePrice:parseInt(basePrice),
+            Discount:parseInt(discount),
+            Category:category,
+            SubCategory:subcategory,
+            Brand: brand,
+            Stock:parseInt(stock)
         }
         try {
             const connection = await req.db.getConnection();

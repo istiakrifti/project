@@ -21,8 +21,8 @@ export default function PaymentPage(props) {
   {
     let total=0;
     for(let i=0;i<orderedProducts.length;i++)
-    {
-        total+= orderedProducts[i].BASE_PRICE*orderedProducts[i].PRODUCT_COUNT;
+    {          
+        total+= (orderedProducts[i].DISCOUNT > 0 ?orderedProducts[i].BASE_PRICE-(orderedProducts[i].BASE_PRICE*(orderedProducts[i].DISCOUNT/100)):orderedProducts[i].BASE_PRICE)*orderedProducts[i].PRODUCT_COUNT;
     }
     return total;
   }
@@ -61,7 +61,7 @@ export default function PaymentPage(props) {
             
       })
       .catch(err => console.log(err));
-    alert('Order confirmed successfully!');
+    alert('Order confirmed successfully...Wait for approval!!!');
     updateCart();
     navigate('/');
   };
@@ -217,9 +217,9 @@ export default function PaymentPage(props) {
               {orderedProducts.map((product) => (
                 <tr key={product.ID}>
                   <td>{product.NAME}</td>
-                  <td>&#2547;{product.BASE_PRICE}</td>
+                  <td>&#2547;{product.DISCOUNT > 0 ?product.BASE_PRICE-(product.BASE_PRICE*(product.DISCOUNT/100)):product.BASE_PRICE}</td>
                   <td>{product.PRODUCT_COUNT}</td>
-                  <td>&#2547;{product.BASE_PRICE*product.PRODUCT_COUNT}</td>
+                  <td>&#2547;{product.DISCOUNT > 0 ?product.BASE_PRICE-(product.BASE_PRICE*(product.DISCOUNT/100)):product.BASE_PRICE*product.PRODUCT_COUNT}</td>
                 </tr>
                 
               ))}

@@ -11,13 +11,13 @@ export default function AdminBar(props) {
                 <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
                     <div className="container-fluid d-flex justify-content-center">
                     <Link className="navbar-brand me-5" to="/checkUsers">
-                            Check Users
+                    <b style = {{color:'yellow'}}> Check Users</b>
                     </Link>
                     <Link className="navbar-brand me-5" to="/addNewProduct">
-                            Add New Product
+                            <b style = {{color:'yellow'}}>Add New Product</b>
                     </Link>
                     <Link className="navbar-brand me-5" to="/pendingPurchase">
-                            Approve Purchase
+                    <b style = {{color:'yellow'}}> Approve Purchase</b>
                     </Link>
                     </div>
                 </nav>

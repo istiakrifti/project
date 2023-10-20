@@ -2,7 +2,7 @@
     position: absolute;
     background-color: #556f8a;
     border: none;
-    border-radius: 3px;
+    border-radius: rpx;
     box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.2);
 }
 .logout {

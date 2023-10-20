@@ -107,7 +107,7 @@ export default function CheckUsers(props) {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4">No user details available.</td>
+                    <td colSpan="7">No purchase details available.</td>
                   </tr>
                 )}
               </tbody>

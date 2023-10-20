@@ -61,15 +61,13 @@ const Navbar = () => {
       localStorage.setItem('MenuData',JSON.stringify(menuData));
       
   return (
-    
-    <nav className="navbar ">
+    <nav className="navbar">
       <ul className="main-menu">
         {menuData.map((item, index) => (
           <MenuItem key={index} category={item.category} subcategories={item.subcategories}  />
         ))}
       </ul>
     </nav>
-
   );
 };
 
